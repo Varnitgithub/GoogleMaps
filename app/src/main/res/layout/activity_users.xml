@@ -27,6 +27,8 @@
                 android:layout_gravity="end"
                 android:background="@drawable/user_deshboard_back"
                 android:gravity="end"
+                android:padding="3dp"
+
                 android:orientation="horizontal"
                 android:weightSum="100">
 
@@ -71,10 +73,13 @@
             <EditText
                 android:id="@+id/searchUser_edit"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 android:hint="Search for a user"
+                android:background="@drawable/search_user_bg"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="3dp"
                 app:layout_constraintEnd_toStartOf="@id/searchBtn"
                 android:textColor="@color/black"/>
 
@@ -82,11 +87,12 @@
                 android:id="@+id/searchBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/quantum_ic_search_grey600_24"
+                android:src="@drawable/baseline_person_search_24"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="6dp"
+                android:padding="6dp"
                 app:layout_constraintStart_toEndOf="@id/searchUser_edit"/>
 
 
@@ -98,10 +104,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="28dp"
             android:layout_marginEnd="4dp"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/search_constraint"
             tools:listitem="@layout/user_item" />
 

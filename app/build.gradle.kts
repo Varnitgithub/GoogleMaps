@@ -4,6 +4,7 @@ plugins {
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id ("com.google.gms.google-services")
     id("kotlin-parcelize")
+    id("kotlin-kapt")
 }
 
 android {
@@ -46,7 +47,7 @@ android {
         dataBinding = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.5.1"
     }
     packaging {
         resources {
@@ -56,7 +57,6 @@ android {
 }
 
 dependencies {
-
     implementation("androidx.core:core-ktx:1.12.0")//1.9.0
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.8.1")
@@ -78,12 +78,12 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Google Maps
-    implementation ("com.google.android.gms:play-services-maps:17.0.1")
+    implementation ("com.google.android.gms:play-services-maps:18.2.0")
     implementation ("com.google.maps:google-maps-services:0.15.0")
 
     // Other dependencies that you might need
   //  implementation ("com.google.android.gms:play-services-location:20.1.0")// For location services
-    implementation ("com.google.android.libraries.places:places:2.5.0")
+    implementation ("com.google.android.libraries.places:places:3.3.0")
 
 
 //Glide
@@ -106,6 +106,7 @@ dependencies {
     //Firebase Auth
     implementation ("com.google.firebase:firebase-auth:22.3.0")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
+
 
 
 }

@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
 
-        app:cardCornerRadius="8dp"
+        app:cardCornerRadius="10dp"
         >
 
         <LinearLayout
@@ -34,6 +34,7 @@
                 android:textSize="16dp"
                 android:layout_gravity="center"
                 android:layout_marginStart="12dp"
+                android:fontFamily="@font/helvetica"
                 android:text="John Doe"
                 android:textColor="@color/black"
 

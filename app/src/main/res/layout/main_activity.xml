@@ -3,10 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <data>
-
-    </data>
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -26,6 +22,8 @@
                 android:layout_gravity="end"
                 android:background="@drawable/user_deshboard_back"
                 android:gravity="end"
+                android:padding="3dp"
+
                 android:orientation="horizontal"
                 android:weightSum="100">
 
@@ -59,15 +57,15 @@
 
         <Button
             android:id="@+id/expandMap"
-            android:layout_width="49dp"
-            android:layout_height="wrap_content"
+            android:layout_width="40dp"
+            android:layout_height="35dp"
             app:layout_constraintBottom_toBottomOf="@+id/frameLL"
             android:src="@drawable/expand"
-            android:layout_marginEnd="3dp"
+            android:layout_marginEnd="4dp"
+            android:gravity="center"
             android:layout_marginBottom="2dp"
             android:drawableEnd="@drawable/expand"
             app:layout_constraintEnd_toEndOf="@+id/frameLL" />
-
 
         <Button
             android:id="@+id/btn_requestLocation"
@@ -98,18 +96,26 @@
 
         </LinearLayout>
 
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/chatRecyclerview"
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedSV"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="97"
-            android:scrollbars="vertical"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/frameLL"
-            tools:listitem="@layout/outgoing_messages" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/chatRecyclerview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="97"
+                android:scrollbars="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/frameLL"
+                tools:listitem="@layout/outgoing_messages" />
+
+        </androidx.core.widget.NestedScrollView>
 
         <LinearLayout
             android:id="@+id/linearLayout"
@@ -152,13 +158,13 @@
                 android:layout_marginEnd="3dp"
                 android:layout_marginBottom="5dp"
                 android:layout_weight="80"
+                android:gravity="center"
                 android:background="@drawable/send_btn_back">
 
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
-                    android:layout_weight="80"
                     android:src="@drawable/send" />
 
             </LinearLayout>

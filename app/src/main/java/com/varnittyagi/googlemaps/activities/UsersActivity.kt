@@ -4,7 +4,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,7 +27,7 @@ class UsersActivity : AppCompatActivity(), UserAdapter.setonitemclclick {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var binding: ActivityUsersBinding
     private lateinit var currentUserUid: String
-    private var userName:String?=null
+    private var userName: String? = null
     private lateinit var userList: ArrayList<UserDetails>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,31 +43,60 @@ class UsersActivity : AppCompatActivity(), UserAdapter.setonitemclclick {
         getCurrentUserFromFirebase()
         getUsersFromFirebase()
 
-        binding.searchBtn.setOnClickListener{
+        binding.searchBtn.setOnClickListener {
             val searchedUserList = arrayListOf<UserDetails>()
             val user = binding.searchUserEdit.text.toString().trim()
-           val searchedUser = searchUser(user)
-            if (searchedUser!=null){
-                Log.d("TAGGGGGGGGG", "onCreate: searched user")
-                searchedUserList.add(searchedUser)
+
+            val searchedUser = searchUser(user)
+            if (searchedUser != null) {
+                Log.d("TAGGGGGGGGG", "onCreate: searched user $searchedUser")
+                for (i in searchedUser.indices) {
+                    searchedUserList.add(searchedUser[i])
+
+                }
                 userAdapter.updateddata(searchedUserList)
+            } else {
+                Log.d("TAGGGGGGGGG", "onCreate: searched user is null")
+
             }
 
         }
 
     }
-    private fun searchUser(name:String):UserDetails?{
-        return userList.find { it.name==name }
 
+    private fun searchUser(name: String): List<UserDetails>? {
+        var firstName = ""
+        var middleName = ""
+        var lastName = ""
+        val nameInSmalls = name.trim().lowercase() ?: "user"
+        val mName = nameInSmalls.split(" ")
+        return userList.filter {
+            val normalizedUserName = it.name?.lowercase()
+            normalizedUserName!!.contains(nameInSmalls) ||
+                    normalizedUserName.split(" ").any { part -> part.contains(nameInSmalls) }
+            /* if (mName.size > 2) {
+            firstName = mName[0]
+             middleName = mName[1]
+              lastName = mName[2]
+
+        }else{
+             firstName = mName[0]
+             lastName = mName[1]
+        }*/
+
+            //return userList.find { it.name==trimmedInput }
+
+        }
     }
 
-   private fun getUsersFromFirebase() {
+
+    private fun getUsersFromFirebase() {
         firebaseDatabase.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 Log.d("TAGGGGGGGGGG", "onDataChange: ${snapshot.childrenCount}")
                 for (users in snapshot.children) {
                     val user = users.getValue<UserDetails>()
-                    if (user?.uid!=currentUserUid){
+                    if (user?.uid != currentUserUid) {
                         userList.add(user ?: UserDetails("", "", "", ""))
 
                     }
@@ -87,14 +115,14 @@ class UsersActivity : AppCompatActivity(), UserAdapter.setonitemclclick {
     }
 
 
-
     private fun getCurrentUserFromFirebase() {
         firebaseDatabase.child(currentUserUid).addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val user =    snapshot.getValue<UserDetails>()// users.getValue<UserDetails>()
+                val user = snapshot.getValue<UserDetails>()// users.getValue<UserDetails>()
                 binding.currentUserName.text = user?.name
                 userName = user?.name
-                Glide.with(this@UsersActivity).load(Uri.parse(user?.profile)).placeholder(R.drawable.userpng).into( binding.currentUserPhoto)
+                Glide.with(this@UsersActivity).load(Uri.parse(user?.profile))
+                    .placeholder(R.drawable.userpng).into(binding.currentUserPhoto)
 
 
             }
@@ -107,11 +135,15 @@ class UsersActivity : AppCompatActivity(), UserAdapter.setonitemclclick {
     }
 
     override fun onitemclicks(items: UserDetails, position: Int) {
-        Toast.makeText(this, "${items.uid}", Toast.LENGTH_SHORT).show()
-       val intent = Intent(this,MainActivity::class.java)
-        intent.putExtra("user",items)
-        intent.putExtra("userName",userName)
+        val intent = nextScreen(items)
         startActivity(intent)
+    }
+
+    private fun nextScreen(items: UserDetails): Intent {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.putExtra("user", items)
+        intent.putExtra("userName", userName)
+        return intent
     }
 
 

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".activities.ProfileActivity">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginBottom="50dp"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageView
+                android:id="@+id/profileImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:src="@drawable/userpng"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/changeProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="@+id/profileImage"
+                app:layout_constraintStart_toStartOf="@+id/profileImage"
+                app:layout_constraintTop_toBottomOf="@id/profileImage"
+                android:text="change profile"
+                android:textSize="12sp"
+                android:layout_marginTop="5dp" />
+
+            <TextView
+                android:id="@+id/nameProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="@+id/profileImage"
+                app:layout_constraintStart_toStartOf="@+id/profileImage"
+                app:layout_constraintTop_toBottomOf="@id/changeProfile"
+                android:text="John Doe"
+                android:textSize="18sp"
+                android:layout_marginTop="30dp" />
+
+            <EditText
+                android:id="@+id/editNameProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="@+id/profileImage"
+                app:layout_constraintStart_toStartOf="@+id/profileImage"
+                app:layout_constraintTop_toBottomOf="@id/changeProfile"
+                android:text="John Doe"
+                android:visibility="gone"
+                android:textSize="18sp"
+                android:layout_marginTop="20dp" />
+
+            <TextView
+                android:id="@+id/emailProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="@+id/profileImage"
+                app:layout_constraintStart_toStartOf="@+id/profileImage"
+                app:layout_constraintTop_toBottomOf="@id/nameProfile"
+                android:text="johndoe@gmail.com"
+                android:textSize="18sp"
+                android:layout_marginTop="10dp" />
+
+            <EditText
+                android:id="@+id/edtEmailProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="@+id/profileImage"
+                app:layout_constraintStart_toStartOf="@+id/profileImage"
+                app:layout_constraintTop_toBottomOf="@id/nameProfile"
+                android:text="johndoe@gmail.com"
+                android:visibility="gone"
+                android:textSize="18sp" />
+
+            <ImageView
+                android:id="@+id/setNameProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/nameProfile"
+                app:layout_constraintTop_toTopOf="@id/nameProfile"
+                android:layout_marginTop="4dp"
+                android:src="@drawable/baseline_edit_24"
+                android:layout_marginStart="10dp"
+                app:layout_constraintBottom_toBottomOf="@id/nameProfile" />
+
+            <ImageView
+                android:id="@+id/setEmailProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/emailProfile"
+                app:layout_constraintTop_toTopOf="@id/emailProfile"
+                android:layout_marginTop="4dp"
+                android:src="@drawable/baseline_edit_24"
+                android:layout_marginStart="10dp"
+                app:layout_constraintBottom_toBottomOf="@id/emailProfile" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

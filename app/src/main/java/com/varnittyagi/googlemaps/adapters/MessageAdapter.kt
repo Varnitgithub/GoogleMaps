@@ -1,4 +1,5 @@
 import android.content.Context
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,8 +12,10 @@ import com.varnittyagi.googlemaps.R
 import com.varnittyagi.googlemaps.models.Messages
 
 
-class MessageAdapter(private val context: Context) :
+class MessageAdapter(private val context: Context,private var receiverPhoto:String) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+        var senderPhoto = FirebaseAuth.getInstance().currentUser?.photoUrl
     companion object {
         const val VIEW_TYPE_SENT = 1
         const val VIEW_TYPE_RECEIVED = 2
@@ -52,13 +55,13 @@ class MessageAdapter(private val context: Context) :
             VIEW_TYPE_SENT -> {
                 val sentMessageHolder = (holder as SentMessageViewHolder)
                 sentMessageHolder.sendText.text = message.message
-                Glide.with(context).load(R.drawable.userpng).into(holder.outgoingImage)
+                Glide.with(context).load(senderPhoto).into(holder.outgoingImage)
             }
 
             VIEW_TYPE_RECEIVED -> {
                 val receivedMessageHolder = (holder as ReceivedMessageViewHolder)
                 receivedMessageHolder.recieveText.text = message.message
-                Glide.with(context).load(R.drawable.userpng).into(holder.incomingImage)
+                Glide.with(context).load((Uri.parse(receiverPhoto))).into(holder.incomingImage)
 
             }
         }

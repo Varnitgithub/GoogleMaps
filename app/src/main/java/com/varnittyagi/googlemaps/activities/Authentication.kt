@@ -45,18 +45,16 @@ class Authentication : AppCompatActivity() {
         firebaseAuth = FirebaseAuth.getInstance()
         firebaseFirestore = FirebaseFirestore.getInstance()
         firebaseDatabase = Firebase.database.getReference("Users")
+        if (firebaseAuth.currentUser!=null){
+            startActivity(Intent(this,UsersActivity::class.java))
+        }
 
         binding.loginBtn.setOnClickListener {
-            if (firebaseAuth.currentUser != null) {
-                startActivity(Intent(this, UsersActivity::class.java))
-            } else {
-                Log.d("TAGGGG", "onCreate: user is null")
                 val signInIntent = mGoogleSignInClient.signInIntent
                 startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN)
-
             }
 
-        }
+
 
         val gso: GoogleSignInOptions =
             GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)

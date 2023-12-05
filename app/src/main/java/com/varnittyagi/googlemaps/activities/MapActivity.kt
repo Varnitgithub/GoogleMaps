@@ -10,7 +10,10 @@ class MapActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
-        val mapsFragment = MapsFragment(LatLngClass("29.306522","77.649698"))
+
+        val latitude = intent.getStringExtra("latitudeToMap")
+        val longitude = intent.getStringExtra("longitudeToMap")
+        val mapsFragment = MapsFragment(LatLngClass(latitude,longitude))
         supportFragmentManager.beginTransaction().replace(R.id.mFrameLayout, mapsFragment).commit()
     }
 }
