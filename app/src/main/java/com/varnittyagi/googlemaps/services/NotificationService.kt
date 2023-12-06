@@ -36,6 +36,8 @@ class NotificationService : Service() {
     private val CHANNEL_ID = "1"
     private var receiverUid:String?=null
     private var receiverName:String?=null
+    private var receiverUserId:String?=null
+    private var senderUserId:String?=null
     private var messageList: String? = null
     private var firebaseAuth:FirebaseAuth = FirebaseAuth.getInstance()
     private var databaseReference = FirebaseDatabase.getInstance().reference
@@ -54,14 +56,19 @@ class NotificationService : Service() {
 
         if (intent != null) {
 
-            val user = intent.getSerializableExtra("user") as? UserDetails
-
-            if (user != null && firebaseAuth.currentUser?.uid != null) {
-                receiverUid = user.uid
-            }
        // messageList = intent.getStringExtra("messageList")
            receiverName = intent.getStringExtra("receiverName")
-            receiverUid?.let { readMessageFromFirebase(it) }
+           receiverUserId = intent.getStringExtra("receiveruserid")
+            senderUserId = intent.getStringExtra("senderuserid")
+            Log.d("TAGGGGGG", "onStartCommand:id$receiverUserId ")
+            Log.d("TAGGGGGG", "onStartCommand:id$senderUserId ")
+
+            if (firebaseAuth.currentUser?.uid!=senderUserId){
+                Log.d("TAGGGGGGG", "onStartCommand: here")
+                readMessageFromFirebase(receiverUserId!!)
+
+            }
+
         }
         return START_STICKY
     }
@@ -117,19 +124,25 @@ class NotificationService : Service() {
     }
 
     private fun readMessageFromFirebase(receiverUserUid:String) {
+
 val currentUserUid = firebaseAuth.currentUser?.uid
         val valueEventListener = object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
+                Log.d("TAGGGGG", "onDataChange: message got")
+
                 list?.clear()
                 for (messageSnapshot: DataSnapshot in dataSnapshot.children) {
                     val message = messageSnapshot.getValue(Messages::class.java)
 
-                    if (message?.senderId == currentUserUid && message?.recieverId == receiverUserUid ||
-                        message?.senderId == receiverUserUid && message.recieverId == currentUserUid
+                    if (message?.senderId == currentUserUid && message?.recieverId == receiverUserId ||
+                        message?.senderId == receiverUserId && message?.recieverId == currentUserUid
                     ) {
-                        list?.add(message)
+                        list?.add(message!!)
                         Log.d("TAGGGGG", "onDataChange: message read")
-                        receiverName?.let { createNotification(message.message, it) }
+                        receiverName?.let { createNotification(message?.message!!, it) }
+
+                    }else{
+                        Log.d("TAGGGGG", "onDataChange:failed to message read")
 
                     }
                 }
@@ -140,5 +153,10 @@ val currentUserUid = firebaseAuth.currentUser?.uid
             }
         }
         databaseReference.child("messages").addValueEventListener(valueEventListener)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopService(Intent(this,NotificationService::class.java))
     }
 }

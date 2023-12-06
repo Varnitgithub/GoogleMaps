@@ -23,7 +23,7 @@ private lateinit var mapsFragmentBtn:FragmentContainerView
         mGoogleMap = googleMap
         googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
-        val sydney = LatLng(latlong.latitude?.toDouble()!!,latlong.longitude?.toDouble()!!)
+        val sydney = LatLng(latlong.latitude?.toDouble()?:29.306522,latlong.longitude?.toDouble()?:77.649698)
         googleMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
 

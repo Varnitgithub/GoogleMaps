@@ -14,6 +14,9 @@ import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -51,16 +54,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var receiverUserUid: String
     private lateinit var messageList: ArrayList<Messages>
     private var receiverName: String? = null
-    private var previousMessage:String?=null
+    private var previousMessage: String? = null
     private var newMessage: String? = null
     private var receiverPhoto: String? = null
     private var userName: String? = null
     private val REQUEST_LOCATION_PERMISSION = 1
     private var latitude: String? = null
     private var longitude: String? = null
- private var receiverLatitude: String? = null
+    private var receiverLatitude: String? = null
     private var receiverLongitude: String? = null
-    private var inOnCreate:Boolean = false
+    private var inOnCreate: Boolean = false
     private var lastHeight = 0
 
     private lateinit var locationManager: LocationManager
@@ -70,6 +73,7 @@ class MainActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.main_activity)
         var frameLayout = findViewById<FrameLayout>(R.id.frameLayout)
 
+
         firebaseAuth = FirebaseAuth.getInstance()
         currentUserUid = firebaseAuth.currentUser?.uid!!
         databaseReference = FirebaseDatabase.getInstance().reference
@@ -78,79 +82,109 @@ class MainActivity : AppCompatActivity() {
         currentUserUid = firebaseAuth.currentUser?.uid.toString()
 
         if (user != null && firebaseAuth.currentUser?.uid != null) {
-            Log.d("TAGGGGGGGGG", "onCreate: $user is the user")
 
 
             receiverUserUid = user.uid.toString()
             receiverName = user.name
             receiverPhoto = user.profile
-            Log.d("TAGGGGGG", "onCreate: user profile we fetch ${user.profile}")
 
         }
 
 
-        messageAdapter = MessageAdapter(this,receiverPhoto?:"")
+        messageAdapter = MessageAdapter(this, receiverPhoto ?: "")
+
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        binding.chatRecyclerview.layoutManager = LinearLayoutManager(this)
+       val layoutManager  = LinearLayoutManager(this)
+        layoutManager.orientation = LinearLayoutManager.VERTICAL
+        binding.chatRecyclerview.layoutManager = layoutManager
         messageList = arrayListOf()
         userName = intent.getStringExtra("userName")
         binding.chatRecyclerview.adapter = messageAdapter
+
+        val rootView = findViewById<View>(android.R.id.content)
+        rootView.viewTreeObserver.addOnGlobalLayoutListener {
+            val rect = android.graphics.Rect()
+            rootView.getWindowVisibleDisplayFrame(rect)
+            val screenHeight = rootView.height
+            val keypadHeight = screenHeight - rect.bottom
+
+            if (keypadHeight > screenHeight * 0.45) { // Adjust this threshold as needed
+                // Keyboard is open
+                val params = binding.chatRecyclerview.layoutParams as ViewGroup.MarginLayoutParams
+                params.bottomMargin = keypadHeight+6
+                binding.chatRecyclerview.layoutParams = params
+            } else {
+                // Keyboard is closed
+                val params = binding.chatRecyclerview.layoutParams as ViewGroup.MarginLayoutParams
+                params.bottomMargin = 0
+                binding.chatRecyclerview.layoutParams = params
+            }
+        }
+
+
         //binding.chatRecyclerview.smoothScrollToPosition(messageAdapter.itemCount-1)
         fetchLocation()
         getLatLng()
-        stopService(Intent(this,NotificationService::class.java))
 
-        val mapsFragment = MapsFragment(LatLngClass(latitude?:"29.306522",longitude?:"77.649698"))
+binding.expandMap.setOnClickListener {
+    val intent = Intent(this, MapActivity::class.java)
+    intent.putExtra("latitudeToMap", receiverLatitude?:"29.306522")
+    intent.putExtra("longitudeToMap", receiverLongitude?:"77.649698")
+    startActivity(intent)
+}
+
+
+        val mapsFragment =
+            MapsFragment(LatLngClass(latitude ?: "29.306522", longitude ?: "77.649698"))
         supportFragmentManager.beginTransaction().replace(R.id.frameLayout, mapsFragment).commit()
 
         binding.expandMap.setOnClickListener {
-            Log.d("TAGGGGGG", "onCreate: click")
             startActivity(Intent(this, MapActivity::class.java))
         }
 
         binding.receiverUserPhoto.setOnClickListener {
-            startActivity(Intent(this,ProfileActivity::class.java))
+            startActivity(Intent(this, ProfileActivity::class.java))
         }
 
 
         setReceiverDashBoard()
 
         binding.btnRequestLocation.setOnClickListener {
-            Toast.makeText(this, "write a message to request location", Toast.LENGTH_SHORT).show()
-            if (binding.userMessage.text != null) {
+            if (binding.userMessage.text.toString().isNotEmpty()) {
                 databaseReference.child("location").child(receiverUserUid).setValue(
                     LocationModel(
                         userName ?: "User",
                         binding.userMessage.text.toString()
                     )
                 )
-
-
-                Log.d(
-                    "TAGGGGGGGG",
-                    "onDataChange: $latitude is the currentUser latitude and $longitude is the longitude"
-                )
-
             } else {
-                Toast.makeText(this, "write a message to request location", Toast.LENGTH_SHORT)
-                    .show()
+                databaseReference.child("location").child(receiverUserUid).setValue(
+                    LocationModel(
+                        userName ?: "User",
+                        "Send me your location"
+                    )
+                )
             }
 
 
         }
 
         binding.sendBtn.setOnClickListener {
-            sendMessageOnFirebase()
-            binding.userMessage.text.clear()
+            if (binding.userMessage.text.toString().isNotEmpty()) {
+                sendMessageOnFirebase()
+                binding.userMessage.text.clear()
+            } else {
+                Toast.makeText(this, "Please write a message", Toast.LENGTH_SHORT).show()
+            }
+
         }
         readMessageFromFirebase()
-        if (inOnCreate){
-            detectLocation()
-            inOnCreate = true
-
-        }
+        detectLocation()
+        inOnCreate = true
+      //  startService(Intent(this, NotificationService::class.java))
 
     }
+
     private fun sendMessageOnFirebase() {
         databaseReference.child("messages").push().setValue(
             Messages(
@@ -174,15 +208,21 @@ class MainActivity : AppCompatActivity() {
                         messageList.add(message)
                         newMessage = message.message
                         previousMessage = message.message
-                            val intent = Intent(this@MainActivity, NotificationService::class.java)
-                            intent.putExtra("messageList", message.message)
-                            intent.putExtra("receiverName",receiverName)
-                            intent.putExtra("receiverPhoto",receiverPhoto)
-                            startService(intent)
+                        val intent = Intent(this@MainActivity, NotificationService::class.java)
+                        intent.putExtra("messageList", message.message)
+                        intent.putExtra("receiverName", receiverName)
+                        intent.putExtra("receiverPhoto", receiverPhoto)
+                        intent.putExtra("receiveruserid", message.recieverId)
+                        intent.putExtra("senderuserid", message.senderId)
+
+                        startService(intent)
                     }
                 }
                 messageAdapter.updateList(messageList)
+                binding.chatRecyclerview.smoothScrollToPosition(messageList.size+3)
+
             }
+
             override fun onCancelled(databaseError: DatabaseError) {
                 println("Error: ${databaseError.message}")
             }
@@ -192,41 +232,48 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-     startService(Intent(this,NotificationService::class.java))
         Log.d("TAGGGGGGGG", "onPause: service start")
 
 
     }
+
     private fun detectLocation() {
         databaseReference.child("location").child(currentUserUid)
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val location = snapshot.getValue<LocationModel>()
 
-                    val dialogView = layoutInflater.inflate(R.layout.location_dialog, null)
-                    val nameTextView: TextView = dialogView.findViewById(R.id.nameTextView)
-                    val messageTextView: TextView = dialogView.findViewById(R.id.messageTextView)
-                    val cancelButton: Button = dialogView.findViewById(R.id.cancelButton)
-                    val sendButton: Button = dialogView.findViewById(R.id.sendButton)
+                    if (location?.message!=null){
 
-                    nameTextView.text = location?.name
-                    messageTextView.text = location?.message
+                        val dialogView = layoutInflater.inflate(R.layout.location_dialog, null)
+                        val nameTextView: TextView = dialogView.findViewById(R.id.nameTextView)
+                        val messageTextView: TextView = dialogView.findViewById(R.id.messageTextView)
+                        val cancelButton: Button = dialogView.findViewById(R.id.cancelButton)
+                        val sendButton: Button = dialogView.findViewById(R.id.sendButton)
 
-                    val alertDialog = AlertDialog.Builder(this@MainActivity)
-                        .setView(dialogView)
-                        .create()
+                        nameTextView.text = location.name
+                        messageTextView.text = location.message
 
-                    alertDialog.show()
+                        val alertDialog = AlertDialog.Builder(this@MainActivity)
+                            .setView(dialogView)
+                            .create()
 
-                    cancelButton.setOnClickListener {
-                        alertDialog.dismiss()
+                        alertDialog.show()
+
+                        cancelButton.setOnClickListener {
+                            alertDialog.dismiss()
+                        }
+                        sendButton.setOnClickListener {
+                            Log.d("TAGGGGG", "onDataChange: $latitude and $longitude are outgoing")
+                            databaseReference.child("LocationDetails").child(receiverUserUid)
+                                .setValue(LatLngClass(latitude ?: "27", longitude ?: "30"))
+                            alertDialog.dismiss()
+                        }
                     }
-                    sendButton.setOnClickListener {
-                        Log.d("TAGGGGG", "onDataChange: $latitude and $longitude are outgoing")
-                        databaseReference.child("LocationDetails").child(receiverUserUid)
-                            .setValue(LatLngClass(latitude ?: "", longitude ?: ""))
-                        alertDialog.dismiss()
-                    }
+
+
+
+
 
                 }
 
@@ -239,7 +286,8 @@ class MainActivity : AppCompatActivity() {
     private fun setReceiverDashBoard() {
         binding.receiverUserName.text = receiverName
         Log.d("TAGGGGGGG", "setReceiverDashBoard: $receiverPhoto")
-       Glide.with(this).load(Uri.parse(receiverPhoto)).placeholder(R.drawable.userpng).into(binding.receiverUserPhoto)
+        Glide.with(this).load(Uri.parse(receiverPhoto)).placeholder(R.drawable.userpng)
+            .into(binding.receiverUserPhoto)
     }
 
     private val locationListener: LocationListener = object : LocationListener {
@@ -270,19 +318,24 @@ class MainActivity : AppCompatActivity() {
                     var fetchedLocation = snapshot.getValue<LatLngClass>()
                     if (fetchedLocation != null) {
                         receiverLatitude = fetchedLocation.latitude
-                            receiverLongitude = fetchedLocation.longitude
-                        Log.d(
-                            "TAGGGGGGGGGGGG",
-                            "onDataChange: ${fetchedLocation.latitude} is the fetched latitude " +
-                                    "\n ${fetchedLocation.longitude} is the fetched longitude"
+                        receiverLongitude = fetchedLocation.longitude
+
+                        supportFragmentManager.beginTransaction()
+                            .remove(MapsFragment(LatLngClass("27", "30"))).commit()
+                        val newMapsFragment = MapsFragment(
+                            LatLngClass(
+                                fetchedLocation.latitude,
+                                fetchedLocation.longitude
+                            )
                         )
-                        supportFragmentManager.beginTransaction().remove(MapsFragment(LatLngClass("",""))).commit()
-                        val newMapsFragment = MapsFragment(LatLngClass(fetchedLocation.latitude,fetchedLocation.longitude))
-                        supportFragmentManager.beginTransaction().add(R.id.frameLayout, newMapsFragment).commit()
+                        supportFragmentManager.beginTransaction()
+                            .add(R.id.frameLayout, newMapsFragment).commit()
 
 
-                        getAddressFromLocation(/*fetchedLocation.latitude?.toDouble()?:*/29.306522,
-                        /*fetchedLocation.longitude?.toDouble()?:*/77.649698)
+                        getAddressFromLocation(
+                            fetchedLocation.latitude?.toDouble() ?: 29.306522,
+                            fetchedLocation.longitude?.toDouble() ?: 77.649698
+                        )
                     }
                 }
 
@@ -291,6 +344,7 @@ class MainActivity : AppCompatActivity() {
                 }
             })
     }
+
     private fun getLatLng() {
         if (ContextCompat.checkSelfPermission(
                 this,
@@ -326,6 +380,7 @@ class MainActivity : AppCompatActivity() {
     private fun sendLatLngOnFirebase() {
 
     }
+
     @SuppressLint("MissingPermission")
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -362,7 +417,8 @@ class MainActivity : AppCompatActivity() {
                 if (addresses.isNotEmpty()) {
                     val address = addresses[0]
 
-                    val showAddressDialog = layoutInflater.inflate(R.layout.show_address_dialog, null)
+                    val showAddressDialog =
+                        layoutInflater.inflate(R.layout.show_address_dialog, null)
                     val nametxt: TextView = showAddressDialog.findViewById(R.id.nametxt)
                     val subAdmin: TextView = showAddressDialog.findViewById(R.id.subAdminArea)
                     val admin: TextView = showAddressDialog.findViewById(R.id.adminArea)
@@ -389,12 +445,11 @@ class MainActivity : AppCompatActivity() {
                     okButton.setOnClickListener {
 
                         val intent = Intent(this, MapActivity::class.java)
-                        intent.putExtra("latitudeToMap",receiverLatitude)
-                        intent.putExtra("longitudeToMap",receiverLongitude)
+                        intent.putExtra("latitudeToMap", receiverLatitude)
+                        intent.putExtra("longitudeToMap", receiverLongitude)
                         startActivity(intent)
                         locationDialog.dismiss()
                     }
-                    Log.d("TAGGGGGG", "${address.subAdminArea}\n ${address.locality} ")
                 }
             }
         } catch (e: IOException) {
@@ -403,9 +458,6 @@ class MainActivity : AppCompatActivity() {
 
         return result
     }
-
-
-
 
 
 }

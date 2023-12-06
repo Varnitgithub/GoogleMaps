@@ -65,7 +65,7 @@
                 android:layout_weight="1"
                 android:textAllCaps="false"
 
-                android:text="Cancel" />
+                android:text="Ok" />
 
             <Button
                 android:id="@+id/okButton"

@@ -22,9 +22,9 @@
                 android:layout_gravity="end"
                 android:background="@drawable/user_deshboard_back"
                 android:gravity="end"
-                android:padding="3dp"
-
                 android:orientation="horizontal"
+
+                android:padding="3dp"
                 android:weightSum="100">
 
 
@@ -59,12 +59,12 @@
             android:id="@+id/expandMap"
             android:layout_width="40dp"
             android:layout_height="35dp"
-            app:layout_constraintBottom_toBottomOf="@+id/frameLL"
-            android:src="@drawable/expand"
             android:layout_marginEnd="4dp"
-            android:gravity="center"
             android:layout_marginBottom="2dp"
             android:drawableEnd="@drawable/expand"
+            android:gravity="center"
+            android:src="@drawable/expand"
+            app:layout_constraintBottom_toBottomOf="@+id/frameLL"
             app:layout_constraintEnd_toEndOf="@+id/frameLL" />
 
         <Button
@@ -96,47 +96,57 @@
 
         </LinearLayout>
 
-        <androidx.core.widget.NestedScrollView
+        <ScrollView
             android:id="@+id/nestedSV"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/frameLL"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@id/linearLayout"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
+            android:layout_marginBottom="6dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/frameLL"
+            android:fillViewport="true">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/chatRecyclerview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="97"
+                android:scrollbarAlwaysDrawVerticalTrack="true"
                 android:scrollbars="vertical"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/frameLL"
+                app:layout_constraintTop_toTopOf="parent"
                 tools:listitem="@layout/outgoing_messages" />
 
-        </androidx.core.widget.NestedScrollView>
+        </ScrollView>
 
-        <LinearLayout
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/linearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:layout_weight="2"
-            android:weightSum="100"
+            android:orientation="horizontal"
+            android:weightSum="4"
+            app:layout_constraintTop_toBottomOf="@id/nestedSV"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginBottom="4dp"
             app:layout_constraintStart_toStartOf="parent">
 
             <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
+                android:id="@+id/cardView2"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="3sp"
-                android:layout_marginEnd="3dp"
-                android:layout_marginBottom="4dp"
-                android:layout_weight="20"
+                android:layout_marginStart="6sp"
+                android:layout_weight="1"
                 android:padding="8dp"
-                app:cardCornerRadius="8dp">
+                android:layout_marginEnd="6dp"
+                app:cardCornerRadius="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/sendBtn"
+                app:layout_constraintStart_toStartOf="parent"
+                >
 
                 <EditText
                     android:id="@+id/userMessage"
@@ -146,31 +156,37 @@
                     android:layout_gravity="center"
                     android:background="@drawable/edttxt_line"
                     android:hint="Enter your message"
+
                     android:padding="12dp" />
 
             </androidx.cardview.widget.CardView>
 
-
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:id="@+id/sendBtn"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="3dp"
-                android:layout_marginBottom="5dp"
-                android:layout_weight="80"
-                android:gravity="center"
-                android:background="@drawable/send_btn_back">
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:padding="18dp"
+                app:cardCornerRadius="14dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/cardView2">
 
                 <ImageView
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:src="@drawable/send" />
+                    android:layout_weight="3"
+                    android:padding="12dp"
+                    android:src="@drawable/baseline_cancel_schedule_send_24" />
 
-            </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
 
-        </LinearLayout>
+
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 
