@@ -1,6 +1,8 @@
 package com.varnittyagi.googlemaps.activities
 
 import android.content.Intent
+import android.location.Location
+import android.location.LocationListener
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -20,19 +22,24 @@ import com.varnittyagi.googlemaps.R
 import com.varnittyagi.googlemaps.adapters.UserAdapter
 import com.varnittyagi.googlemaps.databinding.ActivityUsersBinding
 import com.varnittyagi.googlemaps.models.UserDetails
+import com.varnittyagi.googlemaps.services.CurrentLocationFinder
 
-class UsersActivity : AppCompatActivity(), UserAdapter.setonitemclclick {
+class UsersActivity : AppCompatActivity(), UserAdapter.setonitemclclick,LocationListener {
     private lateinit var userAdapter: UserAdapter
     private lateinit var firebaseDatabase: DatabaseReference
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var binding: ActivityUsersBinding
     private lateinit var currentUserUid: String
+    private  var currentUserLatitude: String? = null
+    private  var currentUserLongitude: String? = null
     private var userName: String? = null
     private lateinit var userList: ArrayList<UserDetails>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_users)
+        startService(Intent(this, CurrentLocationFinder::class.java))
+
         firebaseAuth = FirebaseAuth.getInstance()
         currentUserUid = firebaseAuth.currentUser?.uid!!
         firebaseDatabase = Firebase.database.getReference("Users")
@@ -41,30 +48,27 @@ class UsersActivity : AppCompatActivity(), UserAdapter.setonitemclclick {
         binding.usersRecyclerview.layoutManager = LinearLayoutManager(this)
         binding.usersRecyclerview.adapter = userAdapter
         getCurrentUserFromFirebase()
-        getUsersFromFirebase()
+        //getUsersFromFirebase()
+
+
 
         binding.searchBtn.setOnClickListener {
             val searchedUserList = arrayListOf<UserDetails>()
-            val user = binding.searchUserEdit.text.toString().trim()
+            val user = binding.searchUser.text.toString().trim()
 
             val searchedUser = searchUser(user)
-            if (searchedUser != null) {
-                Log.d("TAGGGGGGGGG", "onCreate: searched user $searchedUser")
-                for (i in searchedUser.indices) {
-                    searchedUserList.add(searchedUser[i])
-
-                }
-                userAdapter.updateddata(searchedUserList)
-            } else {
-                Log.d("TAGGGGGGGGG", "onCreate: searched user is null")
+            for (i in searchedUser.indices) {
+                searchedUserList.add(searchedUser[i])
 
             }
+            userAdapter.updateddata(searchedUserList)
 
         }
+        getUsersFromFirebase()
 
     }
 
-    private fun searchUser(name: String): List<UserDetails>? {
+    private fun searchUser(name: String): List<UserDetails> {
         var firstName = ""
         var middleName = ""
         var lastName = ""
@@ -87,13 +91,17 @@ class UsersActivity : AppCompatActivity(), UserAdapter.setonitemclclick {
             //return userList.find { it.name==trimmedInput }
 
         }
+
+    }
+
+    override fun onResume() {
+        super.onResume()
     }
 
 
     private fun getUsersFromFirebase() {
         firebaseDatabase.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                Log.d("TAGGGGGGGGGG", "onDataChange: ${snapshot.childrenCount}")
                 for (users in snapshot.children) {
                     val user = users.getValue<UserDetails>()
                     if (user?.uid != currentUserUid) {
@@ -102,7 +110,6 @@ class UsersActivity : AppCompatActivity(), UserAdapter.setonitemclclick {
                     }
 
                 }
-                Log.d("TAGGGGGGGGGG", "onDataChange: ${userList}")
 
                 userAdapter.updateddata(userList)
             }
@@ -143,7 +150,14 @@ class UsersActivity : AppCompatActivity(), UserAdapter.setonitemclclick {
         val intent = Intent(this, MainActivity::class.java)
         intent.putExtra("user", items)
         intent.putExtra("userName", userName)
+        intent.putExtra("currentUserLatitude", currentUserLatitude)
+        intent.putExtra("currentUserLongitude", currentUserLongitude)
         return intent
+    }
+
+    override fun onLocationChanged(location: Location) {
+     currentUserLatitude = location.latitude.toString()
+        currentUserLongitude = location.longitude.toString()
     }
 
 

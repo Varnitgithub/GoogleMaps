@@ -9,14 +9,9 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Build
 import android.os.IBinder
-import android.provider.MediaStore
-import android.provider.MediaStore.Audio.Media
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -28,7 +23,6 @@ import com.google.firebase.database.ValueEventListener
 import com.varnittyagi.googlemaps.R
 import com.varnittyagi.googlemaps.activities.MainActivity
 import com.varnittyagi.googlemaps.models.Messages
-import com.varnittyagi.googlemaps.models.UserDetails
 
 
 class NotificationService : Service() {
@@ -41,7 +35,7 @@ class NotificationService : Service() {
     private var messageList: String? = null
     private var firebaseAuth:FirebaseAuth = FirebaseAuth.getInstance()
     private var databaseReference = FirebaseDatabase.getInstance().reference
-    var list:ArrayList<Messages>?=null
+    var list:ArrayList<String>?=null
     override fun onBind(p0: Intent?): IBinder? {
         return null
     }
@@ -52,29 +46,19 @@ class NotificationService : Service() {
     }
     @SuppressLint("SuspiciousIndentation")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("TAGGGGGGG", "onStartCommand: on start command")
-
         if (intent != null) {
-
-       // messageList = intent.getStringExtra("messageList")
            receiverName = intent.getStringExtra("receiverName")
            receiverUserId = intent.getStringExtra("receiveruserid")
-            senderUserId = intent.getStringExtra("senderuserid")
-            Log.d("TAGGGGGG", "onStartCommand:id$receiverUserId ")
-            Log.d("TAGGGGGG", "onStartCommand:id$senderUserId ")
 
             if (firebaseAuth.currentUser?.uid!=senderUserId){
-                Log.d("TAGGGGGGG", "onStartCommand: here")
-                readMessageFromFirebase(receiverUserId!!)
-
+                readMessageFromFirebase()
             }
-
         }
         return START_STICKY
     }
 
 
-    private fun createNotification(userMessage: String, userName: String) {
+    private fun createNotification(userMessage: ArrayList<String>, userName: String) {
 
         createNotificationChannel()
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -86,7 +70,7 @@ class NotificationService : Service() {
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.userpng)//.setLargeIcon(recevierPhoto)
             .setContentTitle(userName)
-            .setContentText(userMessage)
+            .setContentText(userMessage.toString())
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             // Set the intent that fires when the user taps the notification.
             .setContentIntent(pendingIntent)
@@ -123,7 +107,7 @@ class NotificationService : Service() {
         }
     }
 
-    private fun readMessageFromFirebase(receiverUserUid:String) {
+    private fun readMessageFromFirebase() {
 
 val currentUserUid = firebaseAuth.currentUser?.uid
         val valueEventListener = object : ValueEventListener {
@@ -134,12 +118,26 @@ val currentUserUid = firebaseAuth.currentUser?.uid
                 for (messageSnapshot: DataSnapshot in dataSnapshot.children) {
                     val message = messageSnapshot.getValue(Messages::class.java)
 
+                    Log.d("TAGGGGG", "onDataChange: senderid ${message?.senderId}")
+                    Log.d("TAGGGGG", "onDataChange: receiverid ${message?.recieverId}")
+                    Log.d("TAGGGGG", "onDataChange: currentreceiverid ${receiverUserId}")
+                    Log.d("TAGGGGG", "onDataChange: currentuserid ${currentUserUid}")
+
+
+
                     if (message?.senderId == currentUserUid && message?.recieverId == receiverUserId ||
                         message?.senderId == receiverUserId && message?.recieverId == currentUserUid
                     ) {
-                        list?.add(message!!)
+                        list?.add(message?.message!!)
+
+                        Log.d("TAGGGGGGGG", "onDataChange: current user uid : ${firebaseAuth.currentUser?.uid}")
+                        Log.d("TAGGGGGGGG", "onDataChange:senderuserid :  ${senderUserId}")
+                        if (firebaseAuth.currentUser?.uid!=message?.senderId){
+                            receiverName?.let { list?.let { it1 -> createNotification(it1, it) } }
+
+                        }
                         Log.d("TAGGGGG", "onDataChange: message read")
-                        receiverName?.let { createNotification(message?.message!!, it) }
+
 
                     }else{
                         Log.d("TAGGGGG", "onDataChange:failed to message read")
@@ -155,8 +153,5 @@ val currentUserUid = firebaseAuth.currentUser?.uid
         databaseReference.child("messages").addValueEventListener(valueEventListener)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        stopService(Intent(this,NotificationService::class.java))
-    }
+
 }

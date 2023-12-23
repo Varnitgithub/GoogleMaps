@@ -12,21 +12,36 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -34,16 +49,29 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
+import com.google.firebase.messaging.FirebaseMessaging
+import com.pusher.pushnotifications.PushNotifications
 import com.varnittyagi.googlemaps.R
+import com.varnittyagi.googlemaps.application.ApplicationClass
 import com.varnittyagi.googlemaps.databinding.MainActivityBinding
 import com.varnittyagi.googlemaps.fragments.MapsFragment
+import com.varnittyagi.googlemaps.models.LastOnlineData
 import com.varnittyagi.googlemaps.models.LatLngClass
 import com.varnittyagi.googlemaps.models.LocationModel
 import com.varnittyagi.googlemaps.models.Messages
+import com.varnittyagi.googlemaps.models.TypingStatus
 import com.varnittyagi.googlemaps.models.UserDetails
 import com.varnittyagi.googlemaps.services.NotificationService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+import java.util.Timer
+import java.util.TimerTask
 
 class MainActivity : AppCompatActivity() {
     private lateinit var messageAdapter: MessageAdapter
@@ -59,25 +87,92 @@ class MainActivity : AppCompatActivity() {
     private var receiverPhoto: String? = null
     private var userName: String? = null
     private val REQUEST_LOCATION_PERMISSION = 1
+    var lastCount:Int = 0
     private var latitude: String? = null
     private var longitude: String? = null
+    private var senderUserUid: String? = null
+    private var latitudeLivedata: MutableLiveData<String>? = null
     private var receiverLatitude: String? = null
     private var receiverLongitude: String? = null
     private var inOnCreate: Boolean = false
+    private var currentUserLatitude: String? = null
+    private var currentUserLongitude: String? = null
+    private val handler = Handler(Looper.getMainLooper())
+    private lateinit var liveTimeData: MutableLiveData<LastOnlineData>
+    private var livetimeString: String = ""
+    private lateinit var realTime: MutableLiveData<String>
+    private lateinit var receiverStatus: MutableLiveData<LastOnlineData>
+
+    private lateinit var typingaStatusLiveData: MutableLiveData<TypingStatus>
+    private lateinit var liveLocationLiveData: MutableLiveData<LatLngClass>
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navigationView: NavigationView
+    private lateinit var toggle: ActionBarDrawerToggle
     private var lastHeight = 0
 
     private lateinit var locationManager: LocationManager
+
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.main_activity)
-        var frameLayout = findViewById<FrameLayout>(R.id.frameLayout)
+        val applicationClass = application as ApplicationClass
+        currentUserLatitude = intent.getStringExtra("currentUserLatitude")
+        currentUserLongitude = intent.getStringExtra("currentUserLongitude")
+        findViewById<FrameLayout>(R.id.frameLayout)
+        drawerLayout = findViewById(R.id.drawerLayout)
+        navigationView = findViewById(R.id.navigationView)
 
+        binding.attachItems.setOnClickListener {
+            selectFromMenu(it)
+        }
+
+        val mapsFragment =
+            (supportFragmentManager.findFragmentByTag("MAPS_FRAGMENT_TAG") as MapsFragment?)
+
+        if (mapsFragment != null && mapsFragment.isAdded) {
+            // If the fragment is added, update the map
+            mapsFragment.updateMap(
+                LatLng(
+                    27.00,
+                    70.00
+                )
+            )
+        } else {
+            // If the fragment is not added, add it for the first time
+            val newMapsFragment = MapsFragment()
+            newMapsFragment.arguments = Bundle().apply {
+                putParcelable(
+                    "LATLNG",
+                    LatLng(
+                        27.00,
+                        70.00
+                    )
+                )
+            }
+
+            supportFragmentManager.beginTransaction()
+                .add(
+                    R.id.frameLayout,
+                    newMapsFragment,
+                    "MAPS_FRAGMENT_TAG"
+                )
+                .commit()
+        }
+
+        liveLocationLiveData = MutableLiveData()
+        liveTimeData = MutableLiveData()
+        realTime = MutableLiveData()
+        receiverStatus = MutableLiveData()
+        typingaStatusLiveData = MutableLiveData()
 
         firebaseAuth = FirebaseAuth.getInstance()
         currentUserUid = firebaseAuth.currentUser?.uid!!
         databaseReference = FirebaseDatabase.getInstance().reference
         val user = intent.getSerializableExtra("user") as? UserDetails
+
+
 
         currentUserUid = firebaseAuth.currentUser?.uid.toString()
 
@@ -91,10 +186,13 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+
+
+
         messageAdapter = MessageAdapter(this, receiverPhoto ?: "")
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-       val layoutManager  = LinearLayoutManager(this)
+        val layoutManager = LinearLayoutManager(this)
         layoutManager.orientation = LinearLayoutManager.VERTICAL
         binding.chatRecyclerview.layoutManager = layoutManager
         messageList = arrayListOf()
@@ -111,7 +209,7 @@ class MainActivity : AppCompatActivity() {
             if (keypadHeight > screenHeight * 0.45) { // Adjust this threshold as needed
                 // Keyboard is open
                 val params = binding.chatRecyclerview.layoutParams as ViewGroup.MarginLayoutParams
-                params.bottomMargin = keypadHeight+6
+                params.bottomMargin = keypadHeight + 6
                 binding.chatRecyclerview.layoutParams = params
             } else {
                 // Keyboard is closed
@@ -120,53 +218,120 @@ class MainActivity : AppCompatActivity() {
                 binding.chatRecyclerview.layoutParams = params
             }
         }
+        getLatLng()
+//        liveLocationLiveData.observe(this) {
+//        }
+         liveTimeData.observe(this) { liveTimeData ->
+        receiverStatus.observe(this) { receiverStatus ->
+
+
+
+
+                if (receiverStatus.lastOnlineTime == liveTimeData.lastOnlineTime) {
+                    binding.activeNow.text = "Active now"
+                } else {
+                    binding.activeNow.text = receiverStatus.lastOnlineTime?:"df"
+                }
+
+
+            }
+        }
 
 
         //binding.chatRecyclerview.smoothScrollToPosition(messageAdapter.itemCount-1)
         fetchLocation()
-        getLatLng()
 
-binding.expandMap.setOnClickListener {
-    val intent = Intent(this, MapActivity::class.java)
-    intent.putExtra("latitudeToMap", receiverLatitude?:"29.306522")
-    intent.putExtra("longitudeToMap", receiverLongitude?:"77.649698")
-    startActivity(intent)
-}
-
-
-        val mapsFragment =
-            MapsFragment(LatLngClass(latitude ?: "29.306522", longitude ?: "77.649698"))
-        supportFragmentManager.beginTransaction().replace(R.id.frameLayout, mapsFragment).commit()
-
-        binding.expandMap.setOnClickListener {
-            startActivity(Intent(this, MapActivity::class.java))
+        typingaStatusLiveData.observe(this) {
+            Log.d("TAGGGGGGGG", "onCreate: $it is the status")
+            databaseReference.child("TypingStatus").child(receiverUserUid).setValue(it)
         }
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener {
+            if (it.isSuccessful) {
+                val result = it.result
+
+                Log.d("TAGGGGGGGG", "onCreate:$result ")
+            }
+        }
+        binding.expandMap.setOnClickListener {
+
+            val intent = Intent(this, MapActivity::class.java)
+            intent.putExtra("latitudeToMap", receiverLatitude ?: "29.306522")
+            intent.putExtra("longitudeToMap", receiverLongitude ?: "77.649698")
+            startActivity(intent)
+        }
+
+        toggle =
+            ActionBarDrawerToggle(this, drawerLayout, R.string.drawer_open, R.string.drawer_close)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
 
         binding.receiverUserPhoto.setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
 
-
         setReceiverDashBoard()
+        var count = 0
 
-        binding.btnRequestLocation.setOnClickListener {
-            if (binding.userMessage.text.toString().isNotEmpty()) {
-                databaseReference.child("location").child(receiverUserUid).setValue(
-                    LocationModel(
-                        userName ?: "User",
-                        binding.userMessage.text.toString()
-                    )
-                )
-            } else {
-                databaseReference.child("location").child(receiverUserUid).setValue(
-                    LocationModel(
-                        userName ?: "User",
-                        "Send me your location"
-                    )
-                )
+        binding.navBtn.setOnClickListener {
+            var headerview = navigationView.getHeaderView(0)
+            var headerImage = headerview.findViewById<ImageView>(R.id.headerImage)
+            headerImage.setImageResource(R.drawable.userpng)
+
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
+
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.profile -> {
+                    startActivity(Intent(this, ProfileActivity::class.java))
+                    Toast.makeText(this, "profile", Toast.LENGTH_SHORT).show()
+                    true
+                }
+
+                R.id.map -> {
+                    startActivity(Intent(this, MapActivity::class.java))
+                    Toast.makeText(this, "map", Toast.LENGTH_SHORT).show()
+                    true
+                }
+
+                R.id.locationFinder -> {
+                    startActivity(Intent(this, MapActivity::class.java))
+
+                    Toast.makeText(this, "locationFinder", Toast.LENGTH_SHORT).show()
+                    true
+                }
+
+                R.id.settings -> {
+                    Toast.makeText(this, "settings", Toast.LENGTH_SHORT).show()
+                    true
+                }
+
+                R.id.help -> {
+                    Toast.makeText(this, "help", Toast.LENGTH_SHORT).show()
+                    true
+                }
+
+                R.id.termsCondition -> {
+                    Toast.makeText(this, "termsCondition", Toast.LENGTH_SHORT).show()
+                    true
+                }
+
+                R.id.signout -> {
+                    signOut()
+                    Toast.makeText(this, "user signout", Toast.LENGTH_SHORT).show()
+                    true
+                }
+
+                else -> false
             }
 
+        }
 
+        liveTimeData.observe(this) {
+
+            livetimeString = it.lastOnlineTime
+            databaseReference.child("LastOnline").child(currentUserUid).setValue(it)
         }
 
         binding.sendBtn.setOnClickListener {
@@ -181,7 +346,195 @@ binding.expandMap.setOnClickListener {
         readMessageFromFirebase()
         detectLocation()
         inOnCreate = true
-      //  startService(Intent(this, NotificationService::class.java))
+        //  startService(Intent(this, NotificationService::class.java))
+        getReceiverStatus()
+        updateTime()
+
+        handler.post(object : Runnable {
+            override fun run() {
+                updateTime()
+                handler.postDelayed(this, 100) // 1000 milliseconds = 1 second
+            }
+        })
+
+
+
+        binding.userMessage.addTextChangedListener(object : TextWatcher {
+            var count = 0
+            private var typingTimer: Timer? = null
+            private val DELAY: Long = 1000
+
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            }
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+                // You can add some logging here to see if this method gets called
+                Log.d("TAGGGGGGGGG", "onTextChanged: text changed $p0")
+                if (p0.toString().trim().length == 0) {
+                    if ( count<=3){
+                        typingaStatusLiveData.postValue(TypingStatus(false,count))
+                        count++
+                    }else{
+                        typingaStatusLiveData.postValue(TypingStatus(false,count))
+                    count--
+                    }
+
+
+                } else {
+                    if ( count<=3){
+                        typingaStatusLiveData.postValue(TypingStatus(true,count))
+                        count++
+                    }else{
+                        typingaStatusLiveData.postValue(TypingStatus(true,count))
+                        count--
+                    }
+
+                }
+            }
+
+            override fun afterTextChanged(p0: Editable?) {
+
+            }
+        })
+
+    }
+
+    private fun getReceiverStatus() {
+        databaseReference.child("LastOnline").child(receiverUserUid)
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                        val time = snapshot.getValue(LastOnlineData::class.java)
+                        receiverStatus.postValue(time)
+
+
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    // Handle onCancelled if needed
+                }
+            })
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+        latitudeLivedata?.observe(this) {
+        }
+    }
+
+
+    private fun selectFromMenu(view: View) {
+        var count = 0
+        var menu = PopupMenu(this, view)
+        val inflater = menu.menuInflater
+        inflater.inflate(R.menu.attachmenu, menu.menu)
+
+        menu.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.requestLocation -> {
+
+                    count++
+                    if (binding.userMessage.text.toString().isNotEmpty()) {
+                        databaseReference.child("location").child(receiverUserUid).setValue(
+                            LocationModel(
+                                userName ?: "User",
+                                binding.userMessage.text.toString(), count
+                            )
+                        )
+                    } else {
+                        databaseReference.child("location").child(receiverUserUid).setValue(
+                            LocationModel(
+                                userName,
+                                "Send me your location", count
+                            )
+
+                        )
+                    }
+
+
+                    true
+                }
+
+                R.id.myLocation -> {
+                    Toast.makeText(this, "location find", Toast.LENGTH_SHORT).show()
+                    databaseReference.child("UserCurrentLocation").child(currentUserUid)
+                        .addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+
+                                val latitude = snapshot.child("latitude").value.toString()
+                                val longitude = snapshot.child("longitude").value.toString()
+
+                                getAddressFromLocation(latitude.toDouble(), longitude.toDouble())
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                TODO("Not yet implemented")
+                            }
+                        })
+
+
+
+
+
+                    true
+                }
+                // Add more cases as needed
+
+                R.id.trackLocation -> {
+                    databaseReference.child("UserCurrentLocation").child(receiverUserUid)
+                        .addValueEventListener(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                val latLng = snapshot.getValue(LatLngClass::class.java)
+
+                                if (latLng != null) {
+
+                                    val mapsFragment =
+                                        (supportFragmentManager.findFragmentByTag("MAPS_FRAGMENT_TAG") as MapsFragment?)
+
+                                    if (mapsFragment != null && mapsFragment.isAdded) {
+                                        // If the fragment is added, update the map
+                                        mapsFragment.updateMap(
+                                            LatLng(
+                                                latLng.latitude?.toDouble()!!,
+                                                latLng.longitude?.toDouble()!!
+                                            )
+                                        )
+                                    } else {
+                                        // If the fragment is not added, add it for the first time
+                                        val newMapsFragment = MapsFragment()
+                                        newMapsFragment.arguments = Bundle().apply {
+                                            putParcelable(
+                                                "LATLNG",
+                                                LatLngClass(latLng.latitude, latLng.longitude)
+                                            )
+                                        }
+
+                                        supportFragmentManager.beginTransaction()
+                                            .add(
+                                                R.id.frameLayout,
+                                                newMapsFragment,
+                                                "MAPS_FRAGMENT_TAG"
+                                            )
+                                            .commit()
+                                    }
+
+                                }
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                TODO("Not yet implemented")
+                            }
+                        })
+
+                    true
+                }
+
+                else -> false
+            }
+
+
+        }
+        menu.show()
 
     }
 
@@ -190,7 +543,7 @@ binding.expandMap.setOnClickListener {
             Messages(
                 binding.userMessage.text.toString().trim(),
                 currentUserUid,
-                receiverUserUid
+                receiverUserUid, livetimeString
             )
         )
     }
@@ -201,25 +554,19 @@ binding.expandMap.setOnClickListener {
                 messageList.clear()
                 for (messageSnapshot: DataSnapshot in dataSnapshot.children) {
                     val message = messageSnapshot.getValue(Messages::class.java)
-
+                    senderUserUid = message?.senderId
                     if (message?.senderId == currentUserUid && message.recieverId == receiverUserUid ||
                         message?.senderId == receiverUserUid && message.recieverId == currentUserUid
                     ) {
                         messageList.add(message)
                         newMessage = message.message
                         previousMessage = message.message
-                        val intent = Intent(this@MainActivity, NotificationService::class.java)
-                        intent.putExtra("messageList", message.message)
-                        intent.putExtra("receiverName", receiverName)
-                        intent.putExtra("receiverPhoto", receiverPhoto)
-                        intent.putExtra("receiveruserid", message.recieverId)
-                        intent.putExtra("senderuserid", message.senderId)
-
-                        startService(intent)
+                        //  receiverName?.let { MyFirebaseMessagingService().generateNotification(it,message.message) }
                     }
                 }
+
                 messageAdapter.updateList(messageList)
-                binding.chatRecyclerview.smoothScrollToPosition(messageList.size+3)
+                binding.chatRecyclerview.smoothScrollToPosition(messageList.size + 3)
 
             }
 
@@ -230,11 +577,39 @@ binding.expandMap.setOnClickListener {
         databaseReference.child("messages").addValueEventListener(valueEventListener)
     }
 
+    override fun onPause() {
+        super.onPause()
+        val intent = Intent(this@MainActivity, NotificationService::class.java)
+        intent.putExtra("receiverName", receiverName)
+        intent.putExtra("receiverPhoto", receiverPhoto)
+        intent.putExtra("receiveruserid", receiverUserUid)
+        startService(intent)
+    }
+
     override fun onStop() {
         super.onStop()
-        Log.d("TAGGGGGGGG", "onPause: service start")
+
+    }
 
 
+    private fun updateTime() {
+
+        val currentTime = System.currentTimeMillis()
+        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val formattedTime = sdf.format(Date(currentTime))
+        if (lastCount<=3){
+            liveTimeData.postValue(LastOnlineData(formattedTime,lastCount))
+            lastCount++
+        }else{
+            liveTimeData.postValue(LastOnlineData(formattedTime,lastCount))
+            lastCount--
+        }
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopService(Intent(this, NotificationService::class.java))
     }
 
     private fun detectLocation() {
@@ -243,11 +618,12 @@ binding.expandMap.setOnClickListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val location = snapshot.getValue<LocationModel>()
 
-                    if (location?.message!=null){
+                    if (location?.message != null) {
 
                         val dialogView = layoutInflater.inflate(R.layout.location_dialog, null)
                         val nameTextView: TextView = dialogView.findViewById(R.id.nameTextView)
-                        val messageTextView: TextView = dialogView.findViewById(R.id.messageTextView)
+                        val messageTextView: TextView =
+                            dialogView.findViewById(R.id.messageTextView)
                         val cancelButton: Button = dialogView.findViewById(R.id.cancelButton)
                         val sendButton: Button = dialogView.findViewById(R.id.sendButton)
 
@@ -264,15 +640,11 @@ binding.expandMap.setOnClickListener {
                             alertDialog.dismiss()
                         }
                         sendButton.setOnClickListener {
-                            Log.d("TAGGGGG", "onDataChange: $latitude and $longitude are outgoing")
                             databaseReference.child("LocationDetails").child(receiverUserUid)
                                 .setValue(LatLngClass(latitude ?: "27", longitude ?: "30"))
                             alertDialog.dismiss()
                         }
                     }
-
-
-
 
 
                 }
@@ -285,15 +657,36 @@ binding.expandMap.setOnClickListener {
 
     private fun setReceiverDashBoard() {
         binding.receiverUserName.text = receiverName
-        Log.d("TAGGGGGGG", "setReceiverDashBoard: $receiverPhoto")
         Glide.with(this).load(Uri.parse(receiverPhoto)).placeholder(R.drawable.userpng)
             .into(binding.receiverUserPhoto)
+    }
+
+    private fun savedataonFirebase(latLngClass: LatLngClass) {
+        val map = HashMap<String, String>()
+        map["latitude"] = latLngClass.latitude.toString()
+        map["longitude"] = latLngClass.longitude.toString()
+
+        firebaseAuth.currentUser?.uid?.let {
+            databaseReference.child("UserCurrentLocation").child(it).setValue(map)
+        }
     }
 
     private val locationListener: LocationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             latitude = location.latitude.toString()
             longitude = location.longitude.toString()
+            savedataonFirebase(
+                LatLngClass(
+                    location.latitude.toString(),
+                    location.longitude.toString()
+                )
+            )
+            liveLocationLiveData.postValue(
+                LatLngClass(
+                    location.latitude.toString(),
+                    location.longitude.toString()
+                )
+            )
             // Handle location changes here
             // The "location" parameter contains the updated location
         }
@@ -315,21 +708,40 @@ binding.expandMap.setOnClickListener {
         databaseReference.child("LocationDetails")
             .child(currentUserUid).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    var fetchedLocation = snapshot.getValue<LatLngClass>()
+                    val fetchedLocation = snapshot.getValue<LatLngClass>()
                     if (fetchedLocation != null) {
                         receiverLatitude = fetchedLocation.latitude
                         receiverLongitude = fetchedLocation.longitude
 
-                        supportFragmentManager.beginTransaction()
-                            .remove(MapsFragment(LatLngClass("27", "30"))).commit()
-                        val newMapsFragment = MapsFragment(
-                            LatLngClass(
-                                fetchedLocation.latitude,
-                                fetchedLocation.longitude
+                        val mapsFragment =
+                            (supportFragmentManager.findFragmentByTag("MAPS_FRAGMENT_TAG") as MapsFragment?)
+
+                        if (mapsFragment != null && mapsFragment.isAdded) {
+                            // If the fragment is added, update the map
+                            mapsFragment.updateMap(
+                                LatLng(
+                                    fetchedLocation.latitude?.toDouble()!!,
+                                    fetchedLocation.longitude?.toDouble()!!
+                                )
                             )
-                        )
-                        supportFragmentManager.beginTransaction()
-                            .add(R.id.frameLayout, newMapsFragment).commit()
+                        } else {
+                            // If the fragment is not added, add it for the first time
+                            val newMapsFragment = MapsFragment()
+                            newMapsFragment.arguments = Bundle().apply {
+                                putParcelable(
+                                    "LATLNG",
+                                    LatLngClass(fetchedLocation.latitude, fetchedLocation.longitude)
+                                )
+                            }
+
+                            supportFragmentManager.beginTransaction()
+                                .add(
+                                    R.id.frameLayout,
+                                    newMapsFragment,
+                                    "MAPS_FRAGMENT_TAG"
+                                )
+                                .commit()
+                        }
 
 
                         getAddressFromLocation(
@@ -459,5 +871,21 @@ binding.expandMap.setOnClickListener {
         return result
     }
 
+    private fun signOut() {
+        firebaseAuth.signOut()
+
+        // If you are using Google Sign-In, you should also revoke access to the Google account
+        val googleSignInClient = GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN)
+        googleSignInClient.revokeAccess().addOnCompleteListener {
+            // After revoking Google access, you can redirect the user to the login screen
+            redirectToLoginScreen()
+        }
+    }
+
+    private fun redirectToLoginScreen() {
+        val intent = Intent(this, Authentication::class.java)
+        startActivity(intent)
+        finish()
+    }
 
 }

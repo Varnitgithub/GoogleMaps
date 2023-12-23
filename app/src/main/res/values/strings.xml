@@ -4,4 +4,6 @@
     <string name="ok">ok</string>
     <string name="channelName">channelName</string>
     <string name="channelDescription">channelDescription</string>
+    <string name="drawer_open">Open Drawer</string>
+    <string name="drawer_close">Close Drawer</string>
 </resources>

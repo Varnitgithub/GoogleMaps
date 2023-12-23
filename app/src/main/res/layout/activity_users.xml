@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
+        android:background="#C6D0DA"
         tools:context=".activities.UsersActivity">
 
         <androidx.cardview.widget.CardView
@@ -27,10 +28,18 @@
                 android:layout_gravity="end"
                 android:background="@drawable/user_deshboard_back"
                 android:gravity="end"
-                android:padding="3dp"
+                android:padding="5dp"
 
                 android:orientation="horizontal"
                 android:weightSum="100">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:padding="3dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/baseline_density_medium_24"/>
 
 
                 <TextView
@@ -64,24 +73,35 @@
             android:id="@+id/search_constraint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/user_layout_back"
             app:layout_constraintStart_toStartOf="parent"
             android:layout_marginTop="6dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cardView_dashboard">
 
-            <EditText
-                android:id="@+id/searchUser_edit"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                android:hint="Search for a user"
-                android:background="@drawable/search_user_bg"
-                android:layout_marginEnd="16dp"
-                android:layout_marginStart="3dp"
-                app:layout_constraintEnd_toStartOf="@id/searchBtn"
-                android:textColor="@color/black"/>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/search_user_layout"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="2dp"
+                    android:hint="Search user"
+                android:layout_marginStart="10dp"
+                android:textColorHint="#F6F5F5"
+                android:textSize="18sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/searchBtn"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/searchUser"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FBFAFA"
+                    android:textColorHint="#F6F5F5" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
 
             <ImageView
                 android:id="@+id/searchBtn"
@@ -92,25 +112,53 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 android:layout_marginEnd="6dp"
-                android:padding="6dp"
-                app:layout_constraintStart_toEndOf="@id/searchUser_edit"/>
+                android:layout_marginTop="6dp"
+                android:layout_marginStart="10dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:background="@drawable/search_user_bg"
+                app:layout_constraintStart_toEndOf="@id/search_user_layout"/>
 
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/usersRecyclerview"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginTop="28dp"
-            android:layout_marginEnd="4dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            android:layout_height="0dp"
             app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="1.5dp"
+            android:layout_marginEnd="1.5dp"
+            android:background="@drawable/user_card_back"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/search_constraint"
-            tools:listitem="@layout/user_item" />
+            app:layout_constraintEnd_toEndOf="parent">
+
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/usersRecyclerview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:paddingTop="15dp"
+                android:background="@drawable/user_card_back"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:layout_editor_absoluteY="44dp"
+                tools:listitem="@layout/user_item" />
+
+
+
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -1,5 +1,6 @@
 package com.varnittyagi.googlemaps.fragments
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,26 +16,17 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.varnittyagi.googlemaps.R
 import com.varnittyagi.googlemaps.models.LatLngClass
 
-class MapsFragment(private var latlong:LatLngClass) : Fragment() {
-private lateinit var mapsFragmentBtn:FragmentContainerView
-    private lateinit var mGoogleMap: GoogleMap
+class MapsFragment() : Fragment() {
+//private lateinit var mapsFragmentBtn:FragmentContainerView
+    private  var mGoogleMap: GoogleMap?=null
+    private var currentLatLng: LatLng? = null
 
     private val callback = OnMapReadyCallback { googleMap ->
         mGoogleMap = googleMap
+        currentLatLng = LatLng(0.0,0.0)
         googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
 
-        val sydney = LatLng(latlong.latitude?.toDouble()?:29.306522,latlong.longitude?.toDouble()?:77.649698)
-        googleMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, 16f))
-
-
-        val userLocation = LatLng(29.274673, 77.735602)
-
-
     }
-
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,4 +41,14 @@ private lateinit var mapsFragmentBtn:FragmentContainerView
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment?.getMapAsync(callback)
     }
+    @SuppressLint("SuspiciousIndentation")
+    fun updateMap(newLatLng: LatLng) {
+
+        currentLatLng = newLatLng
+        mGoogleMap?.clear() // Clear previous markers if any
+        mGoogleMap?.addMarker(MarkerOptions().position(newLatLng).title("Updated Location"))
+        mGoogleMap?.moveCamera(CameraUpdateFactory.newLatLng(newLatLng))
+        mGoogleMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(newLatLng,17f))
+
 }
+    }

@@ -1,3 +1,3 @@
 package com.varnittyagi.googlemaps.models
 
-data class LocationModel(var name: String?="", var message: String?="")
+data class LocationModel(var name: String?="", var message: String?="",var id:Int? = null)

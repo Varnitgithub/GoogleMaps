@@ -17,12 +17,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.GoogleMaps"
-        tools:targetApi="31">
+        tools:targetApi="31"
+        android:name=".application.ApplicationClass">
+
+<service android:name=".services.CurrentLocationFinder"/>
+
         <activity
             android:name=".activities.ProfileActivity"
             android:exported="false" />
 
         <service android:name=".services.NotificationService" />
+
 
         <activity
             android:name=".activities.MapActivity"
@@ -32,7 +37,8 @@
             android:exported="false" />
         <activity
             android:name=".activities.Authentication"
-            android:exported="true">
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

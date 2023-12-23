@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -23,6 +25,7 @@ import com.google.firebase.ktx.Firebase
 import com.varnittyagi.googlemaps.R
 import com.varnittyagi.googlemaps.databinding.ActivityAuthenticationBinding
 import com.varnittyagi.googlemaps.models.UserDetails
+import com.varnittyagi.googlemaps.services.CurrentLocationFinder
 import java.util.Objects
 
 class Authentication : AppCompatActivity() {
@@ -42,18 +45,32 @@ class Authentication : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_authentication)
+
+        binding.SignupConstraint.visibility = View.GONE
+        binding.loginConstraint.visibility = View.VISIBLE
+
         firebaseAuth = FirebaseAuth.getInstance()
         firebaseFirestore = FirebaseFirestore.getInstance()
         firebaseDatabase = Firebase.database.getReference("Users")
-        if (firebaseAuth.currentUser!=null){
-            startActivity(Intent(this,UsersActivity::class.java))
+        if (firebaseAuth.currentUser != null) {
+            startActivity(Intent(this, UsersActivity::class.java))
         }
 
-        binding.loginBtn.setOnClickListener {
-                val signInIntent = mGoogleSignInClient.signInIntent
-                startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN)
-            }
+        binding.googleBtn.setOnClickListener {
+            val signInIntent = mGoogleSignInClient.signInIntent
+            startActivityForResult(signInIntent, REQUEST_CODE_SIGN_IN)
+        }
 
+        binding.wayToLogin.setOnClickListener {
+            binding.SignupConstraint.visibility = View.GONE
+            binding.loginConstraint.visibility = View.VISIBLE
+
+        }
+        binding.wayToSignUp.setOnClickListener {
+            binding.loginConstraint.visibility = View.GONE
+            binding.SignupConstraint.visibility = View.VISIBLE
+
+        }
 
 
         val gso: GoogleSignInOptions =
@@ -63,6 +80,26 @@ class Authentication : AppCompatActivity() {
                 .build()
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+
+
+        binding.loginBtn.setOnClickListener {
+            binding.SignupConstraint.visibility = View.GONE
+            binding.loginConstraint.visibility = View.VISIBLE
+            loginUser(
+                binding.loginEmail.text.toString().trim(),
+                binding.loginPassword.text.toString().trim()
+            )
+        }
+
+        binding.signupBtn.setOnClickListener {
+            binding.loginConstraint.visibility = View.GONE
+            binding.SignupConstraint.visibility = View.VISIBLE
+            signUpUser(
+                binding.singupEmail.text.toString().trim(),
+                binding.signupPassword.text.toString().trim(),
+                binding.signupConfirmPassword.text.toString().trim()
+            )
+        }
 
 
     }
@@ -136,6 +173,60 @@ class Authentication : AppCompatActivity() {
                 override fun onCancelled(error: DatabaseError) {
                     TODO("Not yet implemented")
                 }
+
+
             })
+    }
+
+    private fun loginUser(email: String, password: String) {
+        firebaseAuth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Login successful, navigate to the next activity or perform other actions
+                    val intent = Intent(this, MainActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    // If login fails, display a message to the user.
+                    Toast.makeText(
+                        baseContext, "Authentication failed.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+    }
+
+    private fun signUpUser(email: String, password: String,confirmPassword:String) {
+        if (password==confirmPassword){
+
+            firebaseAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        val user = firebaseAuth.currentUser
+                        if (user != null) {
+                            // Save user data to Firebase
+                            val userDetails = UserDetails(
+                                user.email!!, user.displayName!!,
+                                user.photoUrl.toString(), user.uid
+                            )
+
+                            firebaseDatabase.child(user.uid).setValue(userDetails)
+
+                            val intent = Intent(this, MainActivity::class.java)
+                            startActivity(intent)
+                            finish()
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Toast.makeText(
+                                baseContext, "Authentication failed.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+        }else{
+            Toast.makeText(this, "Password does not match", Toast.LENGTH_SHORT).show()
+        }
+
     }
 }

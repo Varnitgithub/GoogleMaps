@@ -3,191 +3,301 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.drawerlayout.widget.DrawerLayout
+        android:id="@+id/drawerLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#DCF8C6">
+        android:layout_height="match_parent">
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardView_dashboard"
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_height="match_parent"
+            android:background="#DCF8C6">
 
-            <LinearLayout
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardView_dashboard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:background="@drawable/user_deshboard_back"
-                android:gravity="end"
-                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
-                android:padding="3dp"
-                android:weightSum="100">
-
-
-                <TextView
-                    android:id="@+id/receiver_UserName"
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="20"
-                    android:textColor="@color/white"
-                    android:textSize="21sp"
-                    android:textStyle="bold"
-                    tools:text="John Doe"
+                    android:background="@drawable/user_deshboard_back"
+                    android:gravity="end"
+                    android:orientation="horizontal"
 
-                    />
+                    android:padding="3dp"
+                    >
 
-                <de.hdodenhof.circleimageview.CircleImageView
-                    android:id="@+id/receiver_UserPhoto"
-                    android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:layout_gravity="end"
 
-                    android:layout_margin="2dp"
-                    android:layout_weight="80"
-                    tools:src="@drawable/userpng" />
 
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+                    <ImageView
+                        android:id="@+id/navBtn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:padding="3dp"
+                        app:layout_constraintEnd_toStartOf="@id/receiver_UserPhoto"
+                        android:src="@drawable/baseline_density_medium_24"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
-        <Button
-            android:id="@+id/expandMap"
-            android:layout_width="40dp"
-            android:layout_height="35dp"
-            android:layout_marginEnd="4dp"
-            android:layout_marginBottom="2dp"
-            android:drawableEnd="@drawable/expand"
-            android:gravity="center"
-            android:src="@drawable/expand"
-            app:layout_constraintBottom_toBottomOf="@+id/frameLL"
-            app:layout_constraintEnd_toEndOf="@+id/frameLL" />
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/receiver_UserPhoto"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_gravity="end"
+                        android:layout_margin="2dp"
+                        app:layout_constraintEnd_toStartOf="@+id/linearLayout2"
+                        app:layout_constraintStart_toEndOf="@+id/navBtn"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:src="@drawable/userpng" />
 
-        <Button
-            android:id="@+id/btn_requestLocation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Request location"
-            android:textSize="10sp"
-            app:layout_constraintBottom_toBottomOf="@id/frameLL"
-            app:layout_constraintStart_toStartOf="@+id/frameLL" />
 
-        <LinearLayout
-            android:id="@+id/frameLL"
-            android:layout_width="match_parent"
-            android:layout_height="170dp"
-            android:clickable="true"
-            android:focusable="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardView_dashboard">
+                    <LinearLayout
+                        android:id="@+id/linearLayout2"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/receiver_UserPhoto"
+                        app:layout_constraintTop_toTopOf="parent">
 
-            <FrameLayout
-                android:id="@+id/frameLayout"
+                        <TextView
+                            android:id="@+id/receiver_UserName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="20"
+                            android:textColor="@color/white"
+                            android:textSize="21sp"
+                            android:textStyle="bold"
+                            tools:text="John Doe"
+
+                            />
+                        <TextView
+                            android:id="@+id/activeNow"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start"
+                            android:layout_marginStart="14dp"
+                            android:layout_weight="20"
+                            android:textColor="#F3F1F1"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            tools:text="Active now"
+
+                            />
+
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/videoCall"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:padding="3dp"
+                        android:layout_marginEnd="6dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        android:src="@drawable/zoom"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <ImageView
+                        android:id="@+id/phoneCall"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:padding="3dp"
+                        android:layout_marginEnd="6dp"
+                        app:layout_constraintEnd_toStartOf="@id/videoCall"
+                        android:src="@drawable/call"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.cardview.widget.CardView>
+
+            <Button
+                android:id="@+id/expandMap"
+                android:layout_width="40dp"
+                android:layout_height="35dp"
+                android:layout_marginEnd="4dp"
+                android:layout_marginBottom="2dp"
+                android:drawableEnd="@drawable/expand"
+                android:gravity="center"
+                android:src="@drawable/expand"
+                app:layout_constraintBottom_toBottomOf="@+id/frameLL"
+                app:layout_constraintEnd_toEndOf="@+id/frameLL" />
+
+
+            <LinearLayout
+                android:id="@+id/frameLL"
                 android:layout_width="match_parent"
                 android:layout_height="170dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:orientation="vertical" />
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/nestedSV"
+                app:layout_constraintTop_toBottomOf="@id/cardView_dashboard">
 
-        </LinearLayout>
+                <FrameLayout
+                    android:id="@+id/frameLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="170dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="vertical" />
 
-        <ScrollView
-            android:id="@+id/nestedSV"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@id/linearLayout"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginBottom="6dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/frameLL"
-            android:fillViewport="true">
+            </LinearLayout>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/chatRecyclerview"
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/nestedSV"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintBottom_toTopOf="@id/linearLayout"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginBottom="6dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/frameLL"
+                android:fillViewport="true">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/chatRecyclerview"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        android:scrollbarAlwaysDrawVerticalTrack="true"
+                        android:scrollbars="vertical"
+                        tools:listitem="@layout/outgoing_messages" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+            </androidx.core.widget.NestedScrollView>
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/linearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbarAlwaysDrawVerticalTrack="true"
-                android:scrollbars="vertical"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:listitem="@layout/outgoing_messages" />
-
-        </ScrollView>
-
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/linearLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:orientation="horizontal"
-            android:weightSum="4"
-            app:layout_constraintTop_toBottomOf="@id/nestedSV"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginBottom="4dp"
-            app:layout_constraintStart_toStartOf="parent">
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardView2"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6sp"
-                android:layout_weight="1"
-                android:padding="8dp"
-                android:layout_marginEnd="6dp"
-                app:cardCornerRadius="8dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/sendBtn"
-                app:layout_constraintStart_toStartOf="parent"
-                >
-
-                <EditText
-                    android:id="@+id/userMessage"
-
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:background="@drawable/edttxt_line"
-                    android:hint="Enter your message"
-
-                    android:padding="12dp" />
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/sendBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:padding="18dp"
-                app:cardCornerRadius="14dp"
+                android:layout_gravity="bottom"
+                android:orientation="horizontal"
+                android:weightSum="4"
+                app:layout_constraintTop_toBottomOf="@id/nestedSV"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/cardView2">
+                android:layout_marginBottom="4dp"
+                app:layout_constraintStart_toStartOf="parent">
 
-                <ImageView
-                    android:layout_width="match_parent"
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardView2"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_weight="3"
-                    android:padding="12dp"
-                    android:src="@drawable/baseline_cancel_schedule_send_24" />
+                    android:layout_marginStart="6sp"
+                    android:layout_weight="1"
+                    android:padding="8dp"
+                    android:layout_marginEnd="6dp"
+                    app:cardCornerRadius="8dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/sendBtn"
+                    app:layout_constraintStart_toStartOf="parent"
+                    >
 
-            </androidx.cardview.widget.CardView>
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <ImageView
+                            android:id="@+id/attachItems"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_weight="3"
+
+                            android:layout_marginStart="7dp"
+                            app:layout_constraintEnd_toStartOf="@id/userMessage"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            android:src="@drawable/baseline_attach_file_24" />
+
+                        <EditText
+                            android:id="@+id/userMessage"
+
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:background="@drawable/edttxt_line"
+                            android:hint="Enter your message"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/attachItems"
+
+                            android:padding="12dp" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
 
 
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/sendBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:padding="18dp"
+                    app:cardCornerRadius="14dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/cardView2">
+
+
+
+
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="3"
+                        android:padding="12dp"
+                        android:src="@drawable/baseline_cancel_schedule_send_24" />
+
+                </androidx.cardview.widget.CardView>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
 
+
+        <com.google.android.material.navigation.NavigationView
+            android:id="@+id/navigationView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            app:headerLayout="@layout/headerlayout"
+            android:layout_gravity="start"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:menu="@menu/header_menu"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+    </androidx.drawerlayout.widget.DrawerLayout>
 
 </layout>

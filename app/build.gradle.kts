@@ -89,7 +89,7 @@ dependencies {
 //Glide
     implementation ("com.github.bumptech.glide:glide:4.16.0")
 
-    //Lattie
+    //Lottie
     implementation ("com.airbnb.android:lottie:6.1.0")
 
     //Circular image
@@ -102,10 +102,20 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation ("com.google.firebase:firebase-database:20.3.0")
-
     //Firebase Auth
     implementation ("com.google.firebase:firebase-auth:22.3.0")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
+
+    implementation ("com.google.firebase:firebase-messaging:20.2.3")
+    implementation ("com.google.firebase:firebase-installations:17.2.0")
+    implementation ("com.pusher:push-notifications-android:1.9.1")
+
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2") // Core module
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+
+    implementation ("androidx.recyclerview:recyclerview-selection:1.1.0")// Android module
+
+
 
 
 
